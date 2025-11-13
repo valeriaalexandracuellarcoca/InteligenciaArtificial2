@@ -1,0 +1,9 @@
+django
+djangorestframework
+torch
+pandas
+numpy
+scikit-learn
+joblib
+tabula-py
+JPype1

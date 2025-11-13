@@ -1,0 +1,13 @@
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+virtualenv/
+.virtualenv/
+
+# Activate scripts
+venv/Scripts/
+env/Scripts/
+.venv/Scripts/

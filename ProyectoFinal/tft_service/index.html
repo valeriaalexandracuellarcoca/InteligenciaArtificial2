@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor de Rendimiento</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 2em; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #005a9c; }
+        .form-group { margin-bottom: 1.5em; }
+        label { display: block; font-weight: 600; margin-bottom: 0.5em; }
+        input[type="file"], input[type="number"] { width: 100%; padding: 0.8em; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 1em; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 1em; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #resultado { margin-top: 2em; background: #eef; padding: 1.5em; border-radius: 8px; display: none; }
+        #resultado h2 { margin-top: 0; }
+        #spinner { text-align: center; font-size: 1.2em; display: none; }
+        pre { background: #222; color: #eee; padding: 1em; border-radius: 4px; overflow-x: auto; }
+        .error { color: #d93025; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Predictor de Rendimiento</h1>
+        
+        <form id="prediction-form">
+            <div class="form-group">
+                <label for="kardex-pdf">1. Sube tu Kárdex en PDF:</label>
+                <input type="file" id="kardex-pdf" accept=".pdf" required>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 2em 0;">
+
+            <h3>2. Pistas del Próximo Semestre</h3>
+            <div class="form-group">
+                <label for="carga-academica">Carga Académica (Nro. de materias):</label>
+                <input type="number" id="carga-academica" value="5" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="semestre-corresp">Nivel Promedio de Materias (Ej: 5):</label>
+                <input type="number" id="semestre-corresp" value="4" min="1" required>
+            </div>
+
+            <button type="submit" id="submit-button">Predecir mi Promedio</button>
+        </form>
+
+        <div id="spinner">Cargando...</div>
+        
+        <div id="resultado">
+            </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const pdfFileInput = document.getElementById('kardex-pdf');
+        const cargaInput = document.getElementById('carga-academica');
+        const semestreInput = document.getElementById('semestre-corresp');
+        const submitButton = document.getElementById('submit-button');
+        const resultadoDiv = document.getElementById('resultado');
+        const spinner = document.getElementById('spinner');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            submitButton.disabled = true;
+            spinner.style.display = 'block';
+            resultadoDiv.style.display = 'none';
+            resultadoDiv.innerHTML = ''; 
+
+            const futureInputs = {
+                "Carga_Académica": parseInt(cargaInput.value, 10),
+                "Promedio_Semestre_Corresp": parseFloat(semestreInput.value)
+            };
+
+            const formData = new FormData();
+            formData.append('kardex_pdf', pdfFileInput.files[0]);
+            formData.append('future_inputs_json', JSON.stringify(futureInputs));
+
+            try {
+                const response = await fetch('/api/predict-pdf/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+                spinner.style.display = 'none';
+                resultadoDiv.style.display = 'block';
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+                
+                const pred = data.prediccion;
+                resultadoDiv.innerHTML = `
+                    <h2>¡Predicción Lista!</h2>
+                    <p>Basado en tu kárdex y las pistas del próximo semestre:</p>
+                    <ul>
+                        <li>Tu promedio predicho es: <strong>${pred.promedio_predicho}</strong></li>
+                        <li>Estado: <strong>${pred.estado_predicho}</strong></li>
+                        <li>Riesgo: <strong>${pred.riesgo}</strong></li>
+                        <li>Rango de confianza: <strong>${pred.rango_inferior_q10}</strong> - <strong>${pred.rango_superior_q90}</strong></li>
+                    </ul>
+                    <hr>
+                    <p style="font-size: 0.9em; color: #555;">
+                        Análisis basado en ${data.filas_procesadas} registros de materias.<br>
+                        Promedio histórico del estudiante: ${data.historial_promedio}
+                    </p>
+                    <h3>Respuesta JSON Completa:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+
+            } catch (error) {
+                spinner.style.display = 'none';
+                resultadoDiv.style.display = 'block';
+                resultadoDiv.innerHTML = `
+                    <h2>Error en la Predicción</h2>
+                    <p class="error">${error.message}</p>
+                    <p>Por favor, revisa la consola del servidor de Django para más detalles.</p>
+                `;
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
