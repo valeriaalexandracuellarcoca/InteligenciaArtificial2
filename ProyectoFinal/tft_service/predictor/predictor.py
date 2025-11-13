@@ -120,17 +120,17 @@ def make_prediction(model, artifacts, df_raw, future_inputs_dict):
     pred_q90 = round(predictions_denorm[0, 0, 2], 1)
 
     if pred_median >= 70:
-        riesgo = "🟢 BAJO - Excelente proyección"
+        riesgo = "BAJO - Excelente proyección"
     elif pred_median >= 51:
-        riesgo = "🟡 MEDIO - Aprobación probable con esfuerzo"
+        riesgo = "MEDIO - Aprobación probable con esfuerzo"
     else:
-        riesgo = "🔴 ALTO - Requiere intervención inmediata"
+        riesgo = "ALTO - Requiere intervención inmediata"
     
     resultado = {
         "promedio_predicho": pred_median,
         "rango_inferior_q10": pred_q10,
         "rango_superior_q90": pred_q90,
-        "estado_predicho": "✅ APROBADO" if pred_median >= 51 else "❌ REPROBADO",
+        "estado_predicho": "APROBADO" if pred_median >= 51 else "REPROBADO",
         "riesgo": riesgo
     }
     

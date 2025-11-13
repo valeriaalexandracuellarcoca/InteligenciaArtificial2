@@ -1,0 +1,8 @@
+django
+djangorestframework
+torch
+pandas
+numpy
+scikit-learn
+joblib
+pdfplumber
