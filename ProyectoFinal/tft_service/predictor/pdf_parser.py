@@ -41,7 +41,9 @@ def extraer_datos_kardex(pdf_path):
                             tipo_semestre = match_gestion.group(2) or ""
                             
                             # Ignorar semestres de verano (V)
-                            if tipo_semestre == "V":
+                            if tipo_semestre == "V" :
+                                continue
+                            if tipo_semestre == "IN" :
                                 continue
                             
                             # Construir gestión completa (solo agregar IN, NS se omite)
